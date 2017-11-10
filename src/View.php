@@ -48,12 +48,12 @@ class View
         $content = preg_replace('/\{\s+endif\s\}/', '<?php endif; ?>', $content);
         $content = preg_replace('/\{(\$.*?)\}/', '<?php echo \1;?>', $content);
 
-        file_put_contents($this->templatePath.'', $content);
-        ob_start();
-        ob_implicit_flush();
-            require $file;
-            $content = ob_get_contents();
-        ob_end_clean();
+//        file_put_contents($this->templatePath.'', $content);
+//        ob_start();
+//        ob_implicit_flush();
+//            require $file;
+//            $content = ob_get_contents();
+//        ob_end_clean();
         return $content;
     }
 }

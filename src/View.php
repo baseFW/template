@@ -7,14 +7,16 @@ class View
     protected $tmpl_begin = '{%';
     protected $tmpl_end   = '%}';
     private $var = [];
-    private $templatePath;
-    private $cachePath;
+    private $tmplPath = './view/';
+    private $cachePath = './cache/';
+    private $tmplSuffix = '.html';
+    private $cacheSuffix = '.php';
 
     public function __construct(array $config)
     {
-        $this->config = array_merge([
-            
-        ], $config);
+        foreach ($config as $key => $item) {
+            $this->$key = $item;
+        }
     }
     
     public function getContent(string $file)
@@ -33,27 +35,44 @@ class View
         echo $this->fetch($template);
     }
 
-    public function compile($content)
-    {
-        
-    }
-
     public function fetch($template)
     {
-        $file = '';
-        extract($this->var);
-        $content = file_get_contents('./template/template.html');
-        $content = preg_replace('/\{\s+if(.*?)\}/', '<?php if(\1): ?>', $content);
-        $content = preg_replace('/\{\s+elseif(.*?)\}/', '<?php elseif(\1): ?>', $content);
-        $content = preg_replace('/\{\s+endif\s\}/', '<?php endif; ?>', $content);
-        $content = preg_replace('/\{(\$.*?)\}/', '<?php echo \1;?>', $content);
+        $fileName = $template . $this->tmplSuffix;
+        $cacheFile = $this->cachePath . md5($fileName) . $this->cacheSuffix;
 
-//        file_put_contents($this->templatePath.'', $content);
-//        ob_start();
-//        ob_implicit_flush();
-//            require $file;
-//            $content = ob_get_contents();
-//        ob_end_clean();
+        if (!is_file($cacheFile)) {
+            $this->compile($fileName, $cacheFile);
+        }
+
+        extract($this->var);
+        ob_start();
+        ob_implicit_flush();
+            require $cacheFile;
+            $content = ob_get_contents();
+        ob_end_clean();
+
         return $content;
+    }
+
+    public function compile($fileName, $cacheFile)
+    {
+        $filePath = $this->tmplPath . $fileName;
+        $content = file_get_contents($filePath);
+        $this->parse($content);
+
+        $cacheDir = dirname($cacheFile);
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755);
+        }
+
+        file_put_contents($cacheFile, $content);
+    }
+
+    public function parse(&$content)
+    {
+        $content = preg_replace('/\{if(.*?)\}/', '<?php if(\1): ?>', $content);
+        $content = preg_replace('/\{elseif(.*?)\}/', '<?php elseif(\1): ?>', $content);
+        $content = preg_replace('/\{endif\s\}/', '<?php endif; ?>', $content);
+        $content = preg_replace('/\{(\$.*?)\}/', '<?php echo \1;?>', $content);
     }
 }

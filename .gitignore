@@ -4,3 +4,4 @@ composer.lock
 .vscode/
 .idea/
 .tag*
+cache/
